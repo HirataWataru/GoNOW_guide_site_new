@@ -1,0 +1,21 @@
+# 記事（content/）やコードを変更したときに、サイトがビルドできるかを確認する。
+# 記事の書き方に誤りがあると、ここで「どのファイルの何が違うか」が表示される。
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
