@@ -83,6 +83,29 @@ body {
   color: var(--color-brand-ink);
   font-weight: 700;
 }
+/* 「※」の補足。本文より小さく・淡くして、本文と区別する */
+.prose-gonow ul.notes-gonow {
+  list-style: none;
+  padding-left: 0;
+  font-size: 0.875rem;
+  line-height: 1.75;
+  color: var(--color-navy-soft);
+}
+.prose-gonow * + ul.notes-gonow {
+  margin-top: 0.5rem;
+}
+.prose-gonow ul.notes-gonow li {
+  position: relative;
+  padding-left: 1.25em;
+}
+.prose-gonow ul.notes-gonow li + li {
+  margin-top: 0.125rem;
+}
+.prose-gonow ul.notes-gonow li::before {
+  content: "※";
+  position: absolute;
+  left: 0;
+}
 .prose-gonow a {
   color: var(--color-brand-ink);
   text-decoration: underline;

@@ -127,6 +127,46 @@ function headingId(text: string, ctx: Ctx) {
   return n === 0 ? base : `${base}-${n}`;
 }
 
+/** 改行ごとに分ける */
+function splitLines(rich: Rich[]): Rich[][] {
+  const lines: Rich[][] = [[]];
+  for (const r of rich) {
+    const parts = r.text.split("\n");
+    parts.forEach((part, i) => {
+      if (i > 0) lines.push([]);
+      if (part || r.image) lines.at(-1)!.push({ ...r, text: part });
+    });
+  }
+  return lines.filter((l) => l.length > 0);
+}
+
+const NOTE_MARK = /^\s*[※＊]\s*/;
+
+/**
+ * 段落のうち「※」で始まる行を、本文と分けて小さな補足として表示する。
+ * 例：「リストをご用意ください。\n※電波判定は当社で行います。」→ 本文＋補足1行
+ */
+function paragraphWithNotes(rich: Rich[]): Block[] {
+  const lines = splitLines(rich);
+  const isNote = (line: Rich[]) => NOTE_MARK.test(line[0]?.text ?? "");
+  if (!lines.some(isNote)) return [{ type: "p", text: rich }];
+
+  const out: Block[] = [];
+  for (const line of lines) {
+    if (isNote(line)) {
+      const stripped = [{ ...line[0], text: line[0].text.replace(NOTE_MARK, "") }, ...line.slice(1)];
+      const last = out.at(-1);
+      if (last?.type === "notes") last.items.push(stripped);
+      else out.push({ type: "notes", items: [stripped] });
+    } else {
+      const last = out.at(-1);
+      if (last?.type === "p") last.text.push({ text: "\n" }, ...line);
+      else out.push({ type: "p", text: [...line] });
+    }
+  }
+  return out;
+}
+
 function convert(tokens: Token[], ctx: Ctx): Block[] {
   const out: Block[] = [];
   for (let i = 0; i < tokens.length; i++) {
@@ -169,7 +209,7 @@ function convert(tokens: Token[], ctx: Ctx): Block[] {
           else out.push({ type: "link", href: link.href, title: link.text || link.href });
           break;
         }
-        out.push({ type: "p", text: inline(p.tokens) });
+        out.push(...paragraphWithNotes(inline(p.tokens)));
         break;
       }
       case "list": {

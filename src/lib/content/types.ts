@@ -28,6 +28,8 @@ export type Block =
   | { type: "table"; header: boolean; rows: Rich[][][] }
   | { type: "columns"; columns: Block[][] }
   | { type: "quote"; text: Rich[] }
+  /** 「※」で始まる補足の行 */
+  | { type: "notes"; items: Rich[][] }
   | { type: "code"; text: string }
   | { type: "link"; href: string; title: string }
   | { type: "file"; href: string; name: string }

@@ -197,6 +197,16 @@ function BlockView({ block: b }: { block: Block }) {
         </div>
       );
     }
+    case "notes":
+      return (
+        <ul className="notes-gonow">
+          {b.items.map((item, i) => (
+            <li key={i}>
+              <RichText value={item} />
+            </li>
+          ))}
+        </ul>
+      );
     case "quote":
       return (
         <blockquote className="border-l-4 border-mist pl-4 text-navy-soft">
