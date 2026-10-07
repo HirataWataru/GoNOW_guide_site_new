@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { Blocks, RichText } from "@/components/blocks";
+import { Blocks } from "@/components/blocks";
+import { TableOfContents } from "@/components/table-of-contents";
 import { Icon } from "@/components/icons";
 import { ArticleList, ContactBanner, PageHero, formatDate, type Crumb } from "@/components/ui";
 import { getAllArticles, getArticle } from "@/lib/content";
@@ -36,7 +37,9 @@ export default async function ArticlePage({ params }: Props) {
   }
   crumbs.push({ label: article.title });
 
-  const toc = article.blocks.filter((b): b is Heading => b.type === "h2");
+  const toc = article.blocks
+    .filter((b): b is Heading => b.type === "h2")
+    .map((h) => ({ id: h.id, label: h.text.map((r) => r.text).join("") }));
   const related = category
     ? (await getAllArticles()).filter(
         (a) => a.id !== article.id && a.category === category.key && (a.kind === "guide" || a.kind === "faq"),
@@ -64,12 +67,9 @@ export default async function ArticlePage({ params }: Props) {
           )}
 
           {toc.length > 2 && (
-            <nav aria-labelledby="toc-mobile" className="mb-8 rounded-xl border border-line p-4 lg:hidden">
-              <h2 id="toc-mobile" className="text-sm font-bold">
-                この記事の内容
-              </h2>
-              <TocList toc={toc} />
-            </nav>
+            <div className="mb-8 lg:hidden">
+              <TableOfContents items={toc} titleId="toc-mobile" variant="box" />
+            </div>
           )}
 
           <div className="prose-gonow">
@@ -98,12 +98,7 @@ export default async function ArticlePage({ params }: Props) {
 
         {toc.length > 0 && (
           <aside className="hidden lg:block">
-            <nav aria-labelledby="toc" className="sticky top-24 border-l-2 border-mist pl-4">
-              <h2 id="toc" className="text-sm font-bold">
-                この記事の内容
-              </h2>
-              <TocList toc={toc} />
-            </nav>
+            <TableOfContents items={toc} titleId="toc" />
           </aside>
         )}
       </div>
@@ -111,16 +106,3 @@ export default async function ArticlePage({ params }: Props) {
   );
 }
 
-function TocList({ toc }: { toc: Heading[] }) {
-  return (
-    <ol className="mt-2 space-y-1.5 text-sm">
-      {toc.map((h) => (
-        <li key={h.id}>
-          <a href={`#${h.id}`} className="block leading-snug text-navy-soft hover:text-brand-ink hover:underline">
-            <RichText value={h.text} />
-          </a>
-        </li>
-      ))}
-    </ol>
-  );
-}

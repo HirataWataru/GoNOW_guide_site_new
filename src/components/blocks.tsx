@@ -1,4 +1,5 @@
 import { Icon } from "./icons";
+import { ZoomableImage } from "./zoomable-image";
 import type { Block, Rich } from "@/lib/content/types";
 
 const COLOR_CLASS: Record<NonNullable<Rich["color"]>, string> = {
@@ -130,9 +131,7 @@ function BlockView({ block: b }: { block: Block }) {
     case "image":
       return (
         <figure>
-          {/* Notion の画像はサイズ不明・URL が都度変わるため next/image ではなく img を使う */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={b.src} alt={b.alt} loading="lazy" className="w-full rounded-lg border border-line" />
+          <ZoomableImage src={b.src} alt={b.alt} />
           {b.caption && (
             <figcaption className="mt-2 text-center text-sm text-navy-soft">
               <RichText value={b.caption} />
@@ -179,9 +178,17 @@ function BlockView({ block: b }: { block: Block }) {
           </table>
         </div>
       );
-    case "columns":
+    case "columns": {
+      // 画像だけを並べた列は、スマホでも2列にして縦に長くなりすぎないようにする
+      const imagesOnly = b.columns.every((col) => col.length === 1 && col[0].type === "image");
       return (
-        <div className="grid gap-6 md:grid-flow-col md:auto-cols-fr">
+        <div
+          className={
+            imagesOnly
+              ? "grid grid-cols-2 items-start gap-4 sm:grid-flow-col sm:auto-cols-fr sm:grid-cols-none"
+              : "grid gap-6 md:grid-flow-col md:auto-cols-fr"
+          }
+        >
           {b.columns.map((col, i) => (
             <div key={i} className="space-y-4">
               <Blocks blocks={col} />
@@ -189,6 +196,7 @@ function BlockView({ block: b }: { block: Block }) {
           ))}
         </div>
       );
+    }
     case "quote":
       return (
         <blockquote className="border-l-4 border-mist pl-4 text-navy-soft">
